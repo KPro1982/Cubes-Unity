@@ -1,0 +1,13 @@
+.ButtonStyle {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    width: 50%;
+    height: 25px;
+    border-left-color: rgba(200, 200, 200, 255);
+    border-right-color: rgba(200, 200, 200, 255);
+    border-top-color: rgba(200, 200, 200, 255);
+    border-bottom-color: rgba(200, 200, 200, 255);
+    background-color: rgb(241, 238, 17);
+    font-size: 14px;
+}
