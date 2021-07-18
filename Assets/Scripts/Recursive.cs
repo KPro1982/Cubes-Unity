@@ -21,9 +21,9 @@ public class Recursive : Maze
         if (CountSquareNeighbours(x, z) == 2)
         {
             int r = Random.Range(1, 100);
-            if(Extraspace > r)
+            if(GE.Extraspace > r)
             {
-                map[x, z] = 0;
+                GE.map[x, z] = 0;
             }
         }
 
@@ -32,7 +32,7 @@ public class Recursive : Maze
 
     private void Recurse(int x, int z)
     {
-        map[x, z] = 0;
+        GE.map[x, z] = 0;
 
         directions.Shuffle();
 

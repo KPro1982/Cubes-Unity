@@ -36,11 +36,11 @@ public class FindPathAStar : MonoBehaviour
         RemoveAllMarkers();
 
         List<MapLocation> locations = new List<MapLocation>();
-        for (int z = 1; z < maze.depth - 1; z++)
+        for (int z = 1; z < GE.depth - 1; z++)
         {
-            for (int x = 1; x < maze.width - 1; x++)
+            for (int x = 1; x < GE.width - 1; x++)
             {
-                if (maze.map[x, z] != 1)
+                if (GE.map[x, z] != 1)
                     locations.Add(new MapLocation(x, z));
             }
         }
@@ -48,12 +48,12 @@ public class FindPathAStar : MonoBehaviour
         locations.Shuffle();
 
         Vector3 startLocation =
-            new Vector3(locations[0].x * maze.scale, 0, locations[0].z * maze.scale);
+            new Vector3(locations[0].x * GE.scale, 0, locations[0].z * GE.scale);
         GameObject gMarker = Instantiate(start, startLocation, Quaternion.identity);
         startNode = new PathMarker(new MapLocation(locations[0].x, locations[0].z), 0, 0, 0,
             gMarker, null);
         Vector3 goalLocation =
-            new Vector3(locations[1].x * maze.scale, 0, locations[1].z * maze.scale);
+            new Vector3(locations[1].x * GE.scale, 0, locations[1].z * GE.scale);
         goalNode = new PathMarker(new MapLocation(locations[1].x, locations[1].z), 0, 0, 0,
             Instantiate(end, goalLocation, Quaternion.identity), null);
 
@@ -74,9 +74,9 @@ public class FindPathAStar : MonoBehaviour
         foreach (MapLocation dir  in maze.directions)
         {
             MapLocation neighbor = dir + thisNode.location;
-            if (maze.map[neighbor.x, neighbor.z] == 1) continue;
-            if (neighbor.x < 1 || neighbor.x >= maze.width || neighbor.z < 1 ||
-                neighbor.z >= maze.depth) continue;
+            if (GE.map[neighbor.x, neighbor.z] == 1) continue;
+            if (neighbor.x < 1 || neighbor.x >= GE.width || neighbor.z < 1 ||
+                neighbor.z >= GE.depth) continue;
             if (IsClosed(neighbor)) continue;
 
             float G = Vector2.Distance(thisNode.location.ToVector(), neighbor.ToVector()) +
@@ -85,7 +85,7 @@ public class FindPathAStar : MonoBehaviour
             float F = G + H;
 
             GameObject pathBlock = Instantiate(pathP,
-                new Vector3(neighbor.x * maze.scale, 0, neighbor.z * maze.scale),
+                new Vector3(neighbor.x * GE.scale, 0, neighbor.z * GE.scale),
                 Quaternion.identity);
             TextMesh[] values = pathBlock.GetComponentsInChildren<TextMesh>();
             values[0].text = "G: " + G.ToString("0.00");
@@ -161,7 +161,7 @@ public class FindPathAStar : MonoBehaviour
     private GameObject InstantiateMarker(PathMarker marker, GameObject prefab)
     {
         GameObject pathBlock = Instantiate(prefab,
-            new Vector3(marker.location.x * maze.scale, 0, marker.location.z * maze.scale),
+            new Vector3(marker.location.x * GE.scale, 0, marker.location.z * GE.scale),
             Quaternion.identity);
         return pathBlock;
     }
