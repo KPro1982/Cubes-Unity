@@ -1,59 +1,78 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using UnityEngine;
 using System.Linq;
+using UnityEngine;
 
 public class FindPathAStar : MonoBehaviour
 {
-    public Maze maze;
+    public Map activeMap = GE.ActiveMap;
     public Material closedMaterial;
     public Material openMaterial;
-
-    List<PathMarker> open = new List<PathMarker>();
-    List<PathMarker> closed = new List<PathMarker>();
 
     public GameObject start;
     public GameObject end;
     public GameObject pathP;
+    private readonly List<PathMarker> closed = new();
+    private bool done;
 
     private PathMarker goalNode;
-    private PathMarker startNode;
     private PathMarker lastPos;
-    private bool done = false;
+
+    private List<PathMarker> open = new();
+    private PathMarker startNode;
 
 
-    void RemoveAllMarkers()
+    private void Start()
     {
-        GameObject[] markers = GameObject.FindGameObjectsWithTag("marker");
-        foreach (GameObject m in markers)
-            Destroy(m);
     }
 
-    void BeginSearch()
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            BeginSearch();
+        }
+
+        if (Input.GetKeyDown(KeyCode.C) && !done)
+        {
+            Search(lastPos);
+        }
+
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            GetPath();
+        }
+    }
+
+
+    private void RemoveAllMarkers()
+    {
+        var markers = GameObject.FindGameObjectsWithTag("marker");
+        foreach (var m in markers)
+        {
+            Destroy(m);
+        }
+    }
+
+    private void BeginSearch()
     {
         done = false;
         RemoveAllMarkers();
 
-        List<MapLocation> locations = new List<MapLocation>();
-        for (int z = 1; z < GE.depth - 1; z++)
-        {
-            for (int x = 1; x < GE.width - 1; x++)
+        var locations = new List<MapLocation>();
+        for (var z = 1; z < activeMap.depth - 1; z++)
+        for (var x = 1; x < activeMap.width - 1; x++)
+            if (GE.ActiveMap.MapArray[x, z] != 1)
             {
-                if (GE.map[x, z] != 1)
-                    locations.Add(new MapLocation(x, z));
+                locations.Add(new MapLocation(x, z));
             }
-        }
 
         locations.Shuffle();
 
-        Vector3 startLocation =
-            new Vector3(locations[0].x * GE.scale, 0, locations[0].z * GE.scale);
-        GameObject gMarker = Instantiate(start, startLocation, Quaternion.identity);
+        var startLocation = new Vector3(locations[0].x * activeMap.scale, 0, locations[0].z * activeMap.scale);
+        var gMarker = Instantiate(start, startLocation, Quaternion.identity);
         startNode = new PathMarker(new MapLocation(locations[0].x, locations[0].z), 0, 0, 0,
             gMarker, null);
-        Vector3 goalLocation =
-            new Vector3(locations[1].x * GE.scale, 0, locations[1].z * GE.scale);
+        var goalLocation = new Vector3(locations[1].x * activeMap.scale, 0, locations[1].z * activeMap.scale);
         goalNode = new PathMarker(new MapLocation(locations[1].x, locations[1].z), 0, 0, 0,
             Instantiate(end, goalLocation, Quaternion.identity), null);
 
@@ -63,7 +82,7 @@ public class FindPathAStar : MonoBehaviour
         lastPos = startNode;
     }
 
-    void Search(PathMarker thisNode)
+    private void Search(PathMarker thisNode)
     {
         if (thisNode.Equals(goalNode))
         {
@@ -71,23 +90,33 @@ public class FindPathAStar : MonoBehaviour
             return;
         }
 
-        foreach (MapLocation dir  in maze.directions)
+        foreach (var dir in GE.directions)
         {
-            MapLocation neighbor = dir + thisNode.location;
-            if (GE.map[neighbor.x, neighbor.z] == 1) continue;
-            if (neighbor.x < 1 || neighbor.x >= GE.width || neighbor.z < 1 ||
-                neighbor.z >= GE.depth) continue;
-            if (IsClosed(neighbor)) continue;
+            var neighbor = dir + thisNode.location;
+            if (GE.ActiveMap.MapArray[neighbor.x, neighbor.z] == 1)
+            {
+                continue;
+            }
 
-            float G = Vector2.Distance(thisNode.location.ToVector(), neighbor.ToVector()) +
-                      thisNode.G;
-            float H = Vector2.Distance(neighbor.ToVector(), goalNode.location.ToVector());
-            float F = G + H;
+            if (neighbor.x < 1 || neighbor.x >= activeMap.width || neighbor.z < 1 ||
+                neighbor.z >= activeMap.depth)
+            {
+                continue;
+            }
 
-            GameObject pathBlock = Instantiate(pathP,
-                new Vector3(neighbor.x * GE.scale, 0, neighbor.z * GE.scale),
-                Quaternion.identity);
-            TextMesh[] values = pathBlock.GetComponentsInChildren<TextMesh>();
+            if (IsClosed(neighbor))
+            {
+                continue;
+            }
+
+            var G = Vector2.Distance(thisNode.location.ToVector(), neighbor.ToVector()) +
+                    thisNode.G;
+            var H = Vector2.Distance(neighbor.ToVector(), goalNode.location.ToVector());
+            var F = G + H;
+
+            var pathBlock = Instantiate(pathP,
+                new Vector3(neighbor.x * activeMap.scale, 0, neighbor.z * activeMap.scale), Quaternion.identity);
+            var values = pathBlock.GetComponentsInChildren<TextMesh>();
             values[0].text = "G: " + G.ToString("0.00");
             values[1].text = "H: " + H.ToString("0.00");
             values[2].text = "F: " + F.ToString("0.00");
@@ -98,8 +127,8 @@ public class FindPathAStar : MonoBehaviour
             }
         }
 
-        open = open.OrderBy(p => p.F).ToList<PathMarker>();
-        PathMarker pm = (PathMarker) open.ElementAt(0);
+        open = open.OrderBy(p => p.F).ToList();
+        var pm = open.ElementAt(0);
         closed.Add(pm);
         open.RemoveAt(0);
         pm.marker.GetComponent<Renderer>().material = closedMaterial;
@@ -107,9 +136,9 @@ public class FindPathAStar : MonoBehaviour
         lastPos = pm;
     }
 
-    bool UpdateMarker(MapLocation pos, float g, float h, float f, PathMarker prt)
+    private bool UpdateMarker(MapLocation pos, float g, float h, float f, PathMarker prt)
     {
-        foreach (PathMarker p in open)
+        foreach (var p in open)
         {
             if (p.location.Equals(pos))
             {
@@ -124,52 +153,42 @@ public class FindPathAStar : MonoBehaviour
         return false;
     }
 
-    bool IsClosed(MapLocation marker)
+    private bool IsClosed(MapLocation marker)
     {
-        foreach (PathMarker p in closed)
+        foreach (var p in closed)
         {
-            if (p.location.Equals(marker)) return true;
+            if (p.location.Equals(marker))
+            {
+                return true;
+            }
         }
 
         return false;
     }
 
-
-    void Start()
-    {
-    }
-
-    void GetPath()
+    private void GetPath()
     {
         RemoveAllMarkers();
         open.Clear();
         InstantiateMarker(startNode, start);
         InstantiateMarker(lastPos, end);
-        
-        PathMarker begin = lastPos;
-        PathMarker nextPos = begin.parent;
+
+        var begin = lastPos;
+        var nextPos = begin.parent;
         while (!nextPos.Equals(startNode))
         {
             var pathBlock = InstantiateMarker(nextPos, pathP);
-            
+
             open.Add(nextPos);
             nextPos = nextPos.parent;
-
-        } 
+        }
     }
 
     private GameObject InstantiateMarker(PathMarker marker, GameObject prefab)
     {
-        GameObject pathBlock = Instantiate(prefab,
-            new Vector3(marker.location.x * GE.scale, 0, marker.location.z * GE.scale),
+        var pathBlock = Instantiate(prefab,
+            new Vector3(marker.location.x * activeMap.scale, 0, marker.location.z * activeMap.scale),
             Quaternion.identity);
         return pathBlock;
-    }
-
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.P)) BeginSearch();
-        if (Input.GetKeyDown(KeyCode.C) && !done) Search(lastPos);
-        if (Input.GetKeyDown(KeyCode.M)) GetPath();
     }
 }

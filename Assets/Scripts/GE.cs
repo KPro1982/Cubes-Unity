@@ -1,35 +1,52 @@
 using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
+using UnityEngine.UIElements;
 
-public sealed class GE
+public sealed class GE : MonoBehaviour
 {
-    private static GE instance;
-    private List<GameObject> walls = new List<GameObject>();
-    public static byte[,] map;
-    public static int width = 30; //x length
-    public static int depth = 30; //z length
-
-    public static int scale = 6;
-    public static int Extraspace = 50;
-    public List<GameObject> Walls
+    public static Map ActiveMap
     {
-        get { return walls; }
+        get => activeMap;
+        set => activeMap = value;
     }
 
-    public static GE Singleton
+    public VisualElement UIRoot
+    {
+        get => uiRoot;
+        set => uiRoot = value;
+    }
+
+    private static GE instance;
+    
+ 
+    private static Map activeMap;
+
+
+
+    public VisualElement uiRoot;
+    
+    public static List<MapLocation> directions = new()
+    {
+        new(1, 0),
+        new(0, 1),
+        new(-1, 0),
+        new(0, -1)
+    };
+    
+
+    public static GE S
     {
         get
         {
             if (instance == null)
             {
                 instance = new GE();
-                instance.Walls.AddRange(GameObject.FindGameObjectsWithTag("Wall"));
-                map = new byte[width,depth];
+                
+
+
             }
 
             return instance;
         }
     }
-    
 }

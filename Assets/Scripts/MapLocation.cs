@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class MapLocation       
+public class MapLocation
 {
     public int x;
     public int z;
@@ -13,28 +11,19 @@ public class MapLocation
         z = _z;
     }
 
-    public Vector2 ToVector()
-    {
-        return new Vector2(x, z);
-    }
+    public Vector2 ToVector() => new(x, z);
 
-    public static MapLocation operator +(MapLocation a, MapLocation b)
-        => new MapLocation(a.x + b.x, a.z + b.z);
+    public static MapLocation operator +(MapLocation a, MapLocation b) => new(a.x + b.x, a.z + b.z);
 
     public override bool Equals(object obj)
     {
-        if ((obj == null) || !GetType().Equals(obj.GetType()))
+        if (obj == null || !GetType().Equals(obj.GetType()))
         {
             return false;
         }
-        else
-        {
-            return x == ((MapLocation) obj).x && z == ((MapLocation) obj).z;
-        }
+
+        return x == ((MapLocation) obj).x && z == ((MapLocation) obj).z;
     }
 
-    public override int GetHashCode()
-    {
-        return 0;
-    }
+    public override int GetHashCode() => 0;
 }
